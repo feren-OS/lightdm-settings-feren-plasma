@@ -1,13 +1,14 @@
-Source: lightdm-settings
+Source: lightdm-settings-feren-plasma
 Section: gnome
 Priority: optional
-Maintainer: Linux Mint <root@linuxmint.com>
+Maintainer: Feren OS Team <ferenos@outlook.com>
 Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.5
+Standards-Version: 2023.11.0.0.0
 
 Package: lightdm-settings
 Architecture: all
 Depends: ${misc:Depends}, python3-setproctitle, lsb-release, python3, python3-xapp
+Conflicts: lightdm-settings
 Description: LightDM configuration tool
- A configuration tool for the LightDM display manager.
+ A configuration tool for the LightDM display manager optimised for the Feren OS Plasma experience.
 

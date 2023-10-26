@@ -4,6 +4,7 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio, Gdk, GLib, GdkPixbuf
+import shutil
 
 CONF_PATH = "/etc/lightdm/slick-greeter.conf"
 GROUP_NAME = "Greeter"
@@ -243,10 +244,125 @@ class SettingsPictureChooser(Gtk.Box):
         filter_text.add_mime_type("image/*")
         dialog.add_filter(filter_text)
 
-        backgrounds = "/usr/share/backgrounds"
+        backgrounds = "/usr/share/wallpapers"
 
         if os.path.exists(self.value):
             dialog.set_filename(self.value)
+
+        if os.path.exists(backgrounds):
+            dialog.add_shortcut_folder(backgrounds)
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.frame = Gtk.Frame(visible=False, no_show_all=True)
+        preview = Gtk.Image(visible=True)
+
+        box.pack_start(self.frame, False, False, 0)
+        self.frame.add(preview)
+        dialog.set_preview_widget(box)
+        dialog.set_preview_widget_active(True)
+        dialog.set_use_preview_label(False)
+
+        box.set_margin_end(12)
+        box.set_margin_top(12)
+        box.set_size_request(320, -1)
+
+        dialog.connect("update-preview", self.update_icon_preview_cb, preview)
+
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            self.bind_object.set_text(filename)
+
+        dialog.destroy()
+
+    def update_icon_preview_cb(self, dialog, preview):
+        # Different widths make the dialog look really crappy as it resizes -
+        # constrain the width and adjust the height to keep perspective.
+        filename = dialog.get_preview_filename()
+        if filename is not None:
+            if os.path.isfile(filename):
+                try:
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(filename, 320, -1)
+                    if pixbuf is not None:
+                        preview.set_from_pixbuf(pixbuf)
+                        self.frame.show()
+                        return
+                except GLib.Error as e:
+                    print("Unable to generate preview for file '%s' - %s\n", filename, e.message)
+
+        preview.clear()
+        self.frame.hide()
+
+class SettingsLogonPictureChooser(Gtk.Box):
+    def __init__(self, keyfile, settings, key):
+        Gtk.Box.__init__(self)
+        self.get_style_context().add_class("linked")
+        try:
+            value = keyfile.get_string(GROUP_NAME, key)
+        except:
+            value = settings.get_string(key)
+        #Ensure the correct background is currently set
+        if value != "/usr/share/feren-os/images/login":
+            keyfile.set_string(GROUP_NAME, key, "/usr/share/feren-os/images/login")
+            keyfile.save_to_file(CONF_PATH)
+
+        self.bind_object = Gtk.Entry()
+        self.image_button = Gtk.Button()
+
+        self.preview = Gtk.Image.new()
+        layout = self.image_button.create_pango_layout ("Black");
+        ink, logical = layout.get_pixel_extents ();
+
+        self.height = logical.height
+
+        self.preview.set_size_request (logical.width, logical.height);
+        self.image_button.add(self.preview)
+
+        self.pack_start(self.bind_object, True, True, 0)
+        self.pack_start(self.image_button, True, True, 0)
+
+        self.image_button.connect("clicked", self.on_button_pressed)
+        self.handler = self.bind_object.connect("changed", self.set_icon)
+
+        self.set_icon()
+
+    def set_icon(self, *args):
+        val = self.bind_object.get_text()
+        if val == "":
+            self.preview.set_from_icon_name("document-open", Gtk.IconSize.BUTTON)
+            return
+
+        if os.path.exists(val) and not os.path.isdir(val) and val != "/usr/share/feren-os/images/login":
+            img = GdkPixbuf.Pixbuf.new_from_file_at_size(val, -1, self.height)
+            self.preview.set_from_pixbuf(img)
+        else:
+            self.preview.set_from_icon_name("document-open", Gtk.IconSize.BUTTON)
+
+        try:
+            shutil.copy(val, "/usr/share/feren-os/images/login")
+            os.chmod("/usr/share/feren-os/images/login", 0o744)
+        except:
+            try:
+                os.remove("/usr/share/feren-os/images/login")
+                shutil.copy(val, "/usr/share/feren-os/images/login")
+                os.chmod("/usr/share/feren-os/images/login", 0o744)
+            except:
+                print("An error occured setting the login background.")
+
+    def on_button_pressed(self, widget):
+        dialog = Gtk.FileChooserDialog(title=_("Choose an Image File"),
+                                       action=Gtk.FileChooserAction.OPEN,
+                                       transient_for=self.get_toplevel(),
+                                       buttons=(_("_Cancel"), Gtk.ResponseType.CANCEL,
+                                                _("_Open"), Gtk.ResponseType.OK))
+
+        filter_text = Gtk.FileFilter()
+        filter_text.set_name(_("Image files"))
+        filter_text.add_mime_type("image/*")
+        dialog.add_filter(filter_text)
+
+        backgrounds = "/usr/share/wallpapers"
 
         if os.path.exists(backgrounds):
             dialog.add_shortcut_folder(backgrounds)

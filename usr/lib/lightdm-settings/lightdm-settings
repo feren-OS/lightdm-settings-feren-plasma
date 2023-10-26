@@ -129,22 +129,10 @@ class Application(Gtk.Application):
         self.main_stack.add_titled(page, "appearance", _("Appearance"))
         section = page.add_section(_("Background"))
 
-        row = SettingsRow(Gtk.Label(label=_("Background")), SettingsPictureChooser(keyfile, settings, "background"))
-        row.set_tooltip_text(_("Note: Don't select a background from your home directory if it's encrypted or if its permissions are restricted."))
-        section.add_row(row)
-
-        row = SettingsRow(Gtk.Label(label=_("Background color")), SettingsColorChooser(keyfile, settings, "background-color"))
-        row.set_tooltip_text(_("Background color"))
+        row = SettingsRow(Gtk.Label(label=_("Background")), SettingsLogonPictureChooser(keyfile, settings, "background"))
         section.add_row(row)
 
         size_group = Gtk.SizeGroup(mode=Gtk.SizeGroupMode.HORIZONTAL)
-
-        row = SettingsRow(Gtk.Label(label=_("Stretch background across multiple monitors")), SettingsSwitch(keyfile, settings, "stretch-background-across-monitors"))
-        section.add_row(row)
-
-        row = SettingsRow(Gtk.Label(label=_("Draw user backgrounds")), SettingsSwitch(keyfile, settings, "draw-user-backgrounds"))
-        row.set_tooltip_text(_("When a user is selected, show that user's background."))
-        section.add_row(row)
 
         row = SettingsRow(Gtk.Label(label=_("Draw a grid")), SettingsSwitch(keyfile, settings, "draw-grid"))
         row.set_tooltip_text(_("Draw a grid of white dots on top of the background."))
@@ -256,18 +244,6 @@ class Application(Gtk.Application):
         row = SettingsRow(Gtk.Label(label=_("Accessibility options")), SettingsSwitch(keyfile, settings, "show-a11y"))
         row.set_tooltip_text(_("Show accessibility options in the panel."))
         section.add_row(row)
-
-        onboard_layouts_path = "/usr/share/onboard/layouts"
-        if os.path.exists(onboard_layouts_path):
-            layout_options = []
-            for filename in sorted(os.listdir(onboard_layouts_path)):
-                if filename.endswith(".onboard"):
-                    path = os.path.join(onboard_layouts_path, filename)
-                    name = filename.replace(".onboard", "").replace("_", " ").title()
-                    layout_options.append([path, name])
-            if len(layout_options) > 0:
-                row = SettingsRow(Gtk.Label(label=_("On-screen keyboard layout")), SettingsCombo(keyfile, settings, "onscreen-keyboard-layout", layout_options, "string", size_group))
-                section.add_row(row)
 
         row = SettingsRow(Gtk.Label(label=_("Battery power")), SettingsSwitch(keyfile, settings, "show-power"))
         row.set_tooltip_text(_("On laptops, show the battery power in the panel."))
