@@ -135,4 +135,3 @@ StartupNotify=true
 Terminal=false
 Type=Application
 Categories=GNOME;GTK;Settings;System;XFCE;X-XFCE-SettingsDialog;X-XFCE-SystemSettings;
-X-KDE-SubstituteUID=true

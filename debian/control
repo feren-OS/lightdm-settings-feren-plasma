@@ -3,7 +3,7 @@ Section: gnome
 Priority: optional
 Maintainer: Feren OS Team <ferenos@outlook.com>
 Build-Depends: debhelper (>= 9)
-Standards-Version: 2023.11.0.0.0
+Standards-Version: 2023.11.0.0.1
 
 Package: lightdm-settings
 Architecture: all
